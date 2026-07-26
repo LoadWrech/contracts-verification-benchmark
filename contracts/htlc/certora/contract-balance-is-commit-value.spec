@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// After a successful call to `commit()`, the contract's balance must be equal to `msg.value`
+// After a `commit` transaction that does not revert, the contract's balance must be equal to the transaction's value
 
 rule contract_balance_is_commit_value {
     env e;

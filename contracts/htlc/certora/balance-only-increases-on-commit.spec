@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// The contract's balance should only increase if the `commit()` function is called
+// If the contract balance is increased after a transaction, then the transaction must be a `commit`
 
 rule balance_only_increases_on_commit {
     env e;

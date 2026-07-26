@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `reveal()` is successful, it must completely drain the contract's balance
+// If a `reveal` transaction does not revert, it must completely drain the contract's balance
 
 rule reveal_zeroes_balance {
     env e;

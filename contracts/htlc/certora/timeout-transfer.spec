@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `timeout()` is successful, `verifier`'s balance must increase by at least the balance of the contract
+// If a `timeout` transaction does not revert, `verifier`'s balance must increase by at least the balance of the contract
 
 rule timeout_transfer {
     env e;

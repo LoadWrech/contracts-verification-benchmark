@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `commit()` is successful, then `msg.sender` must be the contract's owner
+// If a `commit` transaction does not revert, then `msg.sender` must be the contract's owner
 
 rule commit_auth_owner {
     env e;

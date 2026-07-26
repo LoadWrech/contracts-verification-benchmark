@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `timeout()` is successful, it must completely drain the contract's balance
+// If a `timeout` transaction does not revert, it must completely drain the contract's balance
 
 rule timeout_zeroes_balance {
     env e;

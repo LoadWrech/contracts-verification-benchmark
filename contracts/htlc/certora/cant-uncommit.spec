@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If contract is in a committed state, no function should be able to reverse it back to an uncommitted state
+// If contract is in a committed state, no transaction should be able to reverse it back to an uncommited state
 
 rule cant_uncommit {
     env e;

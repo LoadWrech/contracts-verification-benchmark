@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// After a succesful `commit()` call, any immediate following calls to `commit()` must revert
+// After a `commit` transaction that does not revert, any immediately following `commit` transaction must revert
 
 rule commit_twice_reverts {
     env e;

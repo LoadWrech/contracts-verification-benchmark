@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `reveal()` is successful, `owner`'s balance must increase by at least the balance of the contract
+// If a `reveal` transaction does not revert, `owner`'s balance must increase by at least the balance of the contract
 
 rule reveal_transfer {
     env e;

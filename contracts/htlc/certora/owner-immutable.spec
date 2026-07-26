@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// No succesful function call should change contract's owner
+// No succesful transaction can change contract's owner
 
 rule owner_immutable(method f) {
     address _pre_owner = currentContract.owner;

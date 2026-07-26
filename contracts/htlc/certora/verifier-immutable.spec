@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// No function call should change the address of the verifier
+// No succesful transaction can change the address of the verifier
 
 rule verifier_immutable(method f) {
     address _pre_verifier = currentContract.verifier;

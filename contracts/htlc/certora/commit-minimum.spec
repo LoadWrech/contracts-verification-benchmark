@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// If `commit()` is successful, then `msg.value` is greater than or equal to `fee`
+// If a `commit` transaction does not revert, then the contract balance should increase by at least `fee` ETH
 
 rule commit_minimum {
     env e;

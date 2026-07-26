@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-// `reveal()` and `timeout()` can only be successfully called if contract is in a committed state
+// A `reveal` or `timeout` transaction won't revert only if contract is in a committed state
 
 rule reveal_timeout_after_isCommitted {
     env e;
