@@ -42,6 +42,7 @@ contract BankTest is Test {
         vm.deal(address(contractM), 1 ether);
         vm.startPrank(address(contractM));
         b.deposit{value: 2}();
+        assert(address(b).balance == 2);
 
         uint A_balance_before = address(A).balance;        // Balance of A before the Trxn
 

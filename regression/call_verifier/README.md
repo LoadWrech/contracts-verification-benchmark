@@ -7,47 +7,16 @@ function f(address a) public {
     (bool s, bytes memory data) = a.call("");
 }
 ```
-The properties `call-failure` and `call-success` should both fail since we cannot know if the call will fail or not.
-
-The property `ex-call-is-made` checks if an external call appened.
-
 
 ## Properties
 - **call-failure**: the external call fails
 - **call-success**: the external call succeeds
 - **ex-call-is-made**: an external call has been performed
 
-## Ground truth
-|        | call-failure    | call-success    | ex-call-is-made |
-|--------|-----------------|-----------------|-----------------|
-| **v1** | 0               | 0               | 1               |
- 
+## Verification data
 
-## Experiments
-### SolCMC
-#### Z3
-|        | call-failure    | call-success    | ex-call-is-made |
-|--------|-----------------|-----------------|-----------------|
-| **v1** | TN!             | TN!             | ND              |
- 
-
-#### ELD
-|        | call-failure    | call-success    | ex-call-is-made |
-|--------|-----------------|-----------------|-----------------|
-| **v1** | TN!             | TN!             | ND              |
- 
-
-
-### Certora
-|        | call-failure    | call-success    | ex-call-is-made |
-|--------|-----------------|-----------------|-----------------|
-| **v1** | TN              | TN              | TP!             |
- 
-
-
-### Halmos
-|        | call-failure    | call-success    | ex-call-is-made |
-|--------|-----------------|-----------------|-----------------|
-| **v1** | TN!             | TN!             | TP!             |
- 
-
+- [Ground truth](ground-truth.csv)
+- [Solcmc/z3](solcmc-z3.csv)
+- [Solcmc/Eldarica](solcmc-eld.csv)
+- [Certora](certora.csv)
+- [Halmos](halmos.csv)

@@ -1,4 +1,4 @@
 property,version,truth,footnote-md
-call-failure,v1,0,
-call-success,v1,0,
-ex-call-is-made,v1,1,
+call-failure,v1,0,The call might succeed
+call-success,v1,0,The call might revert
+ex-call-is-made,v1,1,The low-level call is external
