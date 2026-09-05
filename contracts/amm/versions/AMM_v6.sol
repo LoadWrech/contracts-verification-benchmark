@@ -2,11 +2,10 @@
 pragma solidity ^0.8.18;
 
 import "./lib/IERC20.sol";
-import "./lib/ReentrancyGuard.sol";
 
-/// @custom:version Baseline (Safe): locks MINIMUM_LIQUIDITY, flexible balanceOf, nonReentrant, x <= supply, 1e18 precision
+/// @custom:version Bug 5 (Inflation Attack): Removes MINIMUM_LIQUIDITY lock
 
-contract AMM is ReentrancyGuard {
+contract AMM {
     IERC20 public immutable t0;
     IERC20 public immutable t1;
 
@@ -25,7 +24,7 @@ contract AMM is ReentrancyGuard {
         t1 = _t1;
     }
 
-    function deposit(uint x0, uint x1) public nonReentrant {
+    function deposit(uint x0, uint x1) public {
         require(x0 > 0 && x1 > 0);
 
         uint balance0Before = t0.balanceOf(address(this));
@@ -40,12 +39,7 @@ contract AMM is ReentrancyGuard {
         uint toMint;
 
         if (supply == 0) {
-            uint liquidity = _sqrt(amount0 * amount1);
-            require(liquidity > MINIMUM_LIQUIDITY);
-            toMint = liquidity - MINIMUM_LIQUIDITY;
-
-            minted[address(0)] += MINIMUM_LIQUIDITY;
-            supply += MINIMUM_LIQUIDITY;
+            toMint = _sqrt(amount0 * amount1);
         } else {
             uint mint0 = (amount0 * supply) / r0;
             uint mint1 = (amount1 * supply) / r1;
@@ -58,13 +52,16 @@ contract AMM is ReentrancyGuard {
         supply += toMint;
 
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        r0 += amount0;
+        r1 += amount1;
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
-    function redeem(uint x) public nonReentrant {
+    function redeem(uint x) public {
         require(supply > 0);
         require(minted[msg.sender] >= x);
+        require(x < supply);
         require(x > 0);
 
         uint balance0 = t0.balanceOf(address(this));
@@ -81,11 +78,13 @@ contract AMM is ReentrancyGuard {
         _safeTransfer(t0, msg.sender, amount0);
         _safeTransfer(t1, msg.sender, amount1);
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        r0 -= amount0;
+        r1 -= amount1;
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
-    function swap(address t, uint x_in, uint x_out_min) public nonReentrant {
+    function swap(address t, uint x_in, uint x_out_min) public {
         require(t == address(t0) || t == address(t1), "Invalid token");
         require(x_in > 0, "Zero amount in");
 
@@ -114,17 +113,24 @@ contract AMM is ReentrancyGuard {
 
         _safeTransfer(t_out, msg.sender, x_out);
         
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        if (is_t0) {
+            r0 += amountIn;
+            r1 -= x_out;
+        } else {
+            r0 -= x_out;
+            r1 += amountIn;
+        }
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function price(address token) external view returns (uint) {
         if (token == address(t0)) {
             require(r0 > 0);
-            return (r1 * 1e18) / r0;
+            return r1 / r0;
         } else if (token == address(t1)) {
             require(r1 > 0);
-            return (r0 * 1e18) / r1;
+            return r0 / r1;
         }
         revert("Invalid token");
     }
@@ -147,8 +153,7 @@ contract AMM is ReentrancyGuard {
                 z = x;
                 x = (y / x + x) / 2;
             }
-        }
-        else if (y != 0) {
+        } else if (y != 0) {
             z = 1;
         }
     }

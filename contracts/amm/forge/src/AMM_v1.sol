@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "./lib/IERC20.sol";
 import "./lib/ReentrancyGuard.sol";
 
-/// @custom:version Baseline (Safe): locks MINIMUM_LIQUIDITY, flexible balanceOf, nonReentrant, x <= supply, 1e18 precision
+/// @custom:version locks MINIMUM_LIQUIDITY, syncs reserves using balanceOf instead of strict equality, and applies nonReentrant modifier and CEI pattern
 
 contract AMM is ReentrancyGuard {
     IERC20 public immutable t0;
@@ -147,8 +147,7 @@ contract AMM is ReentrancyGuard {
                 z = x;
                 x = (y / x + x) / 2;
             }
-        }
-        else if (y != 0) {
+        } else if (y != 0) {
             z = 1;
         }
     }

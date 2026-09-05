@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "./lib/IERC20.sol";
 import "./lib/ReentrancyGuard.sol";
 
-/// @custom:version Baseline (Safe): locks MINIMUM_LIQUIDITY, flexible balanceOf, nonReentrant, x <= supply, 1e18 precision
+/// @custom:version Bug 1 (Donation DoS): Strict equality check require(balance == r0)
 
 contract AMM is ReentrancyGuard {
     IERC20 public immutable t0;
@@ -58,8 +58,10 @@ contract AMM is ReentrancyGuard {
         supply += toMint;
 
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        r0 += amount0;
+        r1 += amount1;
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function redeem(uint x) public nonReentrant {
@@ -81,8 +83,10 @@ contract AMM is ReentrancyGuard {
         _safeTransfer(t0, msg.sender, amount0);
         _safeTransfer(t1, msg.sender, amount1);
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        r0 -= amount0;
+        r1 -= amount1;
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function swap(address t, uint x_in, uint x_out_min) public nonReentrant {
@@ -114,8 +118,15 @@ contract AMM is ReentrancyGuard {
 
         _safeTransfer(t_out, msg.sender, x_out);
         
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        if (is_t0) {
+            r0 += amountIn;
+            r1 -= x_out;
+        } else {
+            r0 -= x_out;
+            r1 += amountIn;
+        }
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function price(address token) external view returns (uint) {
@@ -147,8 +158,7 @@ contract AMM is ReentrancyGuard {
                 z = x;
                 x = (y / x + x) / 2;
             }
-        }
-        else if (y != 0) {
+        } else if (y != 0) {
             z = 1;
         }
     }

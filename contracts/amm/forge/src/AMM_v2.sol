@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "./lib/IERC20.sol";
 import "./lib/ReentrancyGuard.sol";
 
-/// @custom:version Baseline (Safe): locks MINIMUM_LIQUIDITY, flexible balanceOf, nonReentrant, x <= supply, 1e18 precision
+/// @custom:version locks MINIMUM_LIQUIDITY
 
 contract AMM is ReentrancyGuard {
     IERC20 public immutable t0;
@@ -52,17 +52,21 @@ contract AMM is ReentrancyGuard {
             toMint = mint0 < mint1 ? mint0 : mint1;
         }
 
-        require(toMint > 0, "Insufficient liquidity minted");
+        require(toMint > 0);
 
         minted[msg.sender] += toMint;
         supply += toMint;
 
+        r0 += amount0;
+        r1 += amount1;
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        // Strict Equality Check
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
-    function redeem(uint x) public nonReentrant {
+    // Missing nonReentrant modifier
+    function redeem(uint x) public {
         require(supply > 0);
         require(minted[msg.sender] >= x);
         require(x > 0);
@@ -75,19 +79,22 @@ contract AMM is ReentrancyGuard {
 
         require(amount0 > 0 && amount1 > 0);
 
-        minted[msg.sender] -= x;
-        supply -= x;
-
         _safeTransfer(t0, msg.sender, amount0);
         _safeTransfer(t1, msg.sender, amount1);
 
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+        minted[msg.sender] -= x;
+        supply -= x;
+        r0 -= amount0;
+        r1 -= amount1;
+
+        // Strict Equality Check
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function swap(address t, uint x_in, uint x_out_min) public nonReentrant {
-        require(t == address(t0) || t == address(t1), "Invalid token");
-        require(x_in > 0, "Zero amount in");
+        require(t == address(t0) || t == address(t1));
+        require(x_in > 0);
 
         bool is_t0 = t == address(t0);
         IERC20 t_in = is_t0 ? t0 : t1;
@@ -113,9 +120,17 @@ contract AMM is ReentrancyGuard {
         require(x_out >= x_out_min);
 
         _safeTransfer(t_out, msg.sender, x_out);
-        
-        r0 = t0.balanceOf(address(this));
-        r1 = t1.balanceOf(address(this));
+
+        if (is_t0) {
+            r0 += amountIn;
+            r1 -= x_out;
+        } else {
+            r0 -= x_out;
+            r1 += amountIn;
+        }
+
+        require(t0.balanceOf(address(this)) == r0);
+        require(t1.balanceOf(address(this)) == r1);
     }
 
     function price(address token) external view returns (uint) {
@@ -132,11 +147,11 @@ contract AMM is ReentrancyGuard {
     // --- INTERNAL HELPERS ---
 
     function _safeTransfer(IERC20 token, address to, uint value) private {
-        require(token.transfer(to, value));
+        require(token.transfer(to, value), "SafeTransfer failed");
     }
 
     function _safeTransferFrom(IERC20 token, address from, address to, uint value) private {
-        require(token.transferFrom(from, to, value));
+        require(token.transferFrom(from, to, value), "SafeTransferFrom failed");
     }
 
     function _sqrt(uint y) private pure returns (uint z) {
@@ -147,8 +162,7 @@ contract AMM is ReentrancyGuard {
                 z = x;
                 x = (y / x + x) / 2;
             }
-        }
-        else if (y != 0) {
+        } else if (y != 0) {
             z = 1;
         }
     }
